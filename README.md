@@ -9,7 +9,6 @@ This is a web application built with Next.js, TypeScript, and TailwindCSS. This 
 ## Setup
 1. Clone the repository
 `git clone git@github.com:v8-senior-design/v8-frontend.git
-cd your-nextjs-project
 `
 2. Install dependencies
 `npm install
