@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Plus, X } from 'lucide-react'
+import withAuth from '@/utils/withAuth'
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -51,7 +52,7 @@ const items = {
   ],
 }
 
-export default function CO2eDashboard() {
+const CO2eDashboard = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [quantities, setQuantities] = useState<Record<string, number>>({})
   const [totalCO2e, setTotalCO2e] = useState(0)
@@ -191,3 +192,5 @@ export default function CO2eDashboard() {
     </div>
   )
 }
+
+export default withAuth(CO2eDashboard);
