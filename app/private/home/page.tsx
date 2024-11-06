@@ -1,102 +1,161 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { Plus, X } from 'lucide-react'
-import withAuth from '@/utils/withAuth'
+import { useState, useEffect } from 'react';
+import { Plus, X } from 'lucide-react';
+import withAuth from '@/utils/withAuth';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import CustomNavBar from '@/components/custom/CustomNavBar';
+import axios from 'axios';
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import CustomNavBar from '@/components/custom/CustomNavBar'
-
-const categories = [
-  { id: 'food', name: 'Food' },
-  { id: 'transport', name: 'Transport' },
-  { id: 'energy', name: 'Energy' },
-  { id: 'shopping', name: 'Shopping' },
-  { id: 'waste', name: 'Waste' },
-  { id: 'water', name: 'Water' },
-]
-
-const items = {
-  food: [
-    { id: 'beef', name: 'Beef (100g)', co2e: 2.7 },
-    { id: 'chicken', name: 'Chicken (100g)', co2e: 0.69 },
-    { id: 'rice', name: 'Rice (100g)', co2e: 0.27 },
-  ],
-  transport: [
-    { id: 'car', name: 'Car (per km)', co2e: 0.192 },
-    { id: 'bus', name: 'Bus (per km)', co2e: 0.105 },
-    { id: 'train', name: 'Train (per km)', co2e: 0.041 },
-  ],
-  energy: [
-    { id: 'electricity', name: 'Electricity (kWh)', co2e: 0.475 },
-    { id: 'natural_gas', name: 'Natural Gas (kWh)', co2e: 0.185 },
-    { id: 'lpg', name: 'LPG (kWh)', co2e: 0.215 },
-  ],
-  shopping: [
-    { id: 't_shirt', name: 'T-shirt', co2e: 5.5 },
-    { id: 'jeans', name: 'Jeans', co2e: 25 },
-    { id: 'shoes', name: 'Shoes', co2e: 14 },
-  ],
-  waste: [
-    { id: 'landfill', name: 'Landfill waste (kg)', co2e: 0.99 },
-    { id: 'recycled', name: 'Recycled waste (kg)', co2e: 0.21 },
-    { id: 'composted', name: 'Composted waste (kg)', co2e: 0.08 },
-  ],
-  water: [
-    { id: 'tap_water', name: 'Tap water (liter)', co2e: 0.000344 },
-    { id: 'bottled_water', name: 'Bottled water (liter)', co2e: 0.215 },
-    { id: 'hot_water', name: 'Hot water (liter)', co2e: 0.0135 },
-  ],
-}
+axios.defaults.baseURL = 'https://v8-senior-2f6a65d2df2a.herokuapp.com';
 
 const CO2eDashboard = () => {
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-  const [quantities, setQuantities] = useState<Record<string, number>>({})
-  const [totalCO2e, setTotalCO2e] = useState(0)
-  const [addedItems, setAddedItems] = useState<Record<string, number>>({})
+  const [categories, setCategories] = useState([]);
+  const [factors, setFactors] = useState({});
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [totalCO2e, setTotalCO2e] = useState(0);
+  const [addedItems, setAddedItems] = useState([]);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchCategoriesAndFactors = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setError("Authentication token not found.");
+          return;
+        }
+
+        const config = { headers: { Authorization: `Token ${token}` } };
+
+        // Fetch categories
+        const categoryRes = await axios.get('/calc/emission-categories/', config);
+        setCategories(categoryRes.data);
+
+        // Fetch emission factors for each category
+        const factorsRes = await axios.get('/calc/emission-factors/', config);
+        const factorsByCategory = factorsRes.data.reduce((acc, factor) => {
+          if (!acc[factor.category]) acc[factor.category] = [];
+          acc[factor.category].push(factor);
+          return acc;
+        }, {});
+
+        setFactors(factorsByCategory);
+      } catch (error) {
+        console.error('Error fetching categories and factors:', error);
+      }
+    };
+
+    fetchCategoriesAndFactors();
+  }, []);
+
+  // Fetch today's emissions
+  const fetchTodaysEmissions = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError("Authentication token not found.");
+        return;
+      }
+
+      const config = { headers: { Authorization: `Token ${token}` } };
+      const today = new Date().toISOString().split('T')[0];
+
+      // Fetch emissions for today
+      const response = await axios.get(`/calc/emissions/?date=${today}`, config);
+      setAddedItems(response.data);
+      setError(null); 
+    } catch (error) {
+      console.error("Error fetching today's emissions:", error);
+
+    }
+  };
+
+  useEffect(() => {
+    fetchTodaysEmissions();
+  }, []);
+
+  // Calculate total CO2e for today's emissions each time addedItems changes
+  useEffect(() => {
+    const total = addedItems.reduce((sum, item) => sum + item.total_emissions_kg, 0);
+    setTotalCO2e(total);
+  }, [addedItems]);
 
   const handleCategorySelect = (categoryId: string) => {
-    setSelectedCategory(categoryId)
-    setQuantities({})
-  }
+    setSelectedCategory(categoryId);
+    setQuantities({});
+  };
 
-  const handleQuantityChange = (itemId: string, quantity: number) => {
-    setQuantities(prev => ({ ...prev, [itemId]: Math.max(0, quantity) }))
-  }
+  const handleQuantityChange = (factorId: string, quantity: number) => {
+    setQuantities((prev) => ({ ...prev, [factorId]: Math.max(0, quantity) }));
+  };
 
-  const handleSubmit = () => {
-    if (!selectedCategory) return
+  const handleSubmit = async () => {
+    if (!selectedCategory) {
+      setError("Please select a category before submitting.");
+      return;
+    }
 
-    const categoryItems = items[selectedCategory]
-    let newAddedItems = { ...addedItems }
-    let newTotalCO2e = totalCO2e
+    const categoryFactors = factors[selectedCategory];
+    if (!categoryFactors) {
+      setError("No emission factors found for the selected category.");
+      return;
+    }
 
-    Object.entries(quantities).forEach(([itemId, quantity]) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setError("Authentication token not found. Please log in again.");
+      return;
+    }
+
+    const config = {
+      headers: {
+        Authorization: `Token ${token}`,
+        "Content-Type": "application/json",
+      },
+    };
+
+    // Iterate over each item in quantities and submit to the API
+    for (const [factorId, quantity] of Object.entries(quantities)) {
       if (quantity > 0) {
-        const item = categoryItems.find(i => i.id === itemId)
-        if (item) {
-          newAddedItems[itemId] = (newAddedItems[itemId] || 0) + quantity
-          newTotalCO2e += item.co2e * quantity
+        const factor = categoryFactors.find((f) => f.id === parseInt(factorId));
+        if (factor) {
+          const emissionData = {
+            category: factor.category,
+            emission_factor: factor.id,
+            quantity,
+            date: new Date().toISOString().split('T')[0],
+          };
+
+          try {
+            await axios.post('/calc/emissions/', emissionData, config);
+            await fetchTodaysEmissions(); // Refresh today's emissions after successful submission
+            setError(null); // Clear any errors on success
+          } catch (error) {
+            console.error("Error submitting emission:", error);
+            setError("Failed to submit emission data. Unauthorized access (401).");
+            return;
+          }
         }
       }
-    })
+    }
 
-    setAddedItems(newAddedItems)
-    setTotalCO2e(newTotalCO2e)
-    setQuantities({})
-    setSelectedCategory(null)
-  }
+    setQuantities({});
+    setSelectedCategory(null);
+  };
 
   const handleCancel = () => {
-    setSelectedCategory(null)
-    setQuantities({})
-  }
+    setSelectedCategory(null);
+    setQuantities({});
+  };
 
   return (
     <div className="container mx-auto p-4 max-w-md">
+      {error && <p className="text-red-500 text-center">{error}</p>}
       <Card className="mb-6 w-full">
         <CardHeader>
           <CardTitle className="text-xl sm:text-2xl text-center">CO2e Dashboard</CardTitle>
@@ -124,29 +183,31 @@ const CO2eDashboard = () => {
       ) : (
         <Card className="w-full">
           <CardHeader>
-            <CardTitle className="text-lg">{categories.find(c => c.id === selectedCategory)?.name} Items</CardTitle>
+            <CardTitle className="text-lg">
+              {categories.find((c) => c.id === selectedCategory)?.name} Items
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {items[selectedCategory].map((item) => (
-                <div key={item.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                  <Label htmlFor={`quantity-${item.id}`} className="mb-2 sm:mb-0">
-                    {item.name} ({item.co2e.toFixed(3)} kg CO2e per unit)
+              {factors[selectedCategory]?.map((factor) => (
+                <div key={factor.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                  <Label htmlFor={`quantity-${factor.id}`} className="mb-2 sm:mb-0">
+                    {factor.name} ({factor.factor.toFixed(3)} kg CO2e per {factor.unit})
                   </Label>
                   <div className="flex items-center">
                     <Input
-                      id={`quantity-${item.id}`}
+                      id={`quantity-${factor.id}`}
                       type="number"
-                      value={quantities[item.id] || 0}
-                      onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 0)}
+                      value={quantities[factor.id] || 0}
+                      onChange={(e) => handleQuantityChange(factor.id, parseInt(e.target.value) || 0)}
                       className="w-20 text-center"
                       min="0"
                     />
                     <Button
                       size="icon"
                       variant="outline"
-                      onClick={() => handleQuantityChange(item.id, (quantities[item.id] || 0) + 1)}
-                      aria-label={`Add one ${item.name}`}
+                      onClick={() => handleQuantityChange(factor.id, (quantities[factor.id] || 0) + 1)}
+                      aria-label={`Add one ${factor.name}`}
                       className="ml-2"
                     >
                       <Plus className="h-4 w-4" />
@@ -156,7 +217,9 @@ const CO2eDashboard = () => {
               ))}
             </div>
             <div className="flex justify-between mt-4">
-              <Button onClick={handleSubmit} className="flex-grow">Submit</Button>
+              <Button onClick={handleSubmit} className="flex-grow">
+                Submit
+              </Button>
               <Button onClick={handleCancel} variant="outline" className="ml-2">
                 <X className="h-4 w-4" />
               </Button>
@@ -165,24 +228,24 @@ const CO2eDashboard = () => {
         </Card>
       )}
 
-      {Object.keys(addedItems).length > 0 && (
+      {addedItems.length > 0 && (
         <Card className="mt-6 w-full">
           <CardHeader>
-            <CardTitle className="text-lg">Added Items</CardTitle>
+            <CardTitle className="text-lg">Today's Added Items</CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="space-y-2">
-              {Object.entries(addedItems).map(([itemId, quantity]) => {
-                const category = Object.entries(items).find(([_, items]) => 
-                  items.some(item => item.id === itemId)
-                )?.[0]
-                const item = category ? items[category].find(i => i.id === itemId) : null
-                return item ? (
-                  <li key={itemId} className="flex justify-between text-sm">
-                    <span>{item.name}</span>
-                    <span>{quantity} (Total: {(item.co2e * quantity).toFixed(2)} kg CO2e)</span>
+              {addedItems.map((item) => {
+                // Cross-reference the emission factor ID with factors to get the name
+                const factor = Object.values(factors)
+                  .flat()
+                  .find((f) => f.id === item.emission_factor);
+                return (
+                  <li key={item.id} className="flex justify-between text-sm">
+                    <span>{factor ? factor.name : "Unknown Item"}</span>
+                    <span>{item.quantity} (Total: {item.total_emissions_kg.toFixed(2)} kg CO2e)</span>
                   </li>
-                ) : null
+                );
               })}
             </ul>
           </CardContent>
@@ -190,7 +253,7 @@ const CO2eDashboard = () => {
       )}
       <CustomNavBar />
     </div>
-  )
-}
+  );
+};
 
 export default withAuth(CO2eDashboard);
