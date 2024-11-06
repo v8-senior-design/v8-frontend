@@ -121,7 +121,7 @@ export default function RegisterPage() {
       );
 
       if (response.ok) {
-        router.push("/public/login"); // Redirect to login on successful registration
+        router.push("/public/login");
       } else {
         const errorData = await response.json();
         setError(errorData.error || "Registration failed. Please try again.");
