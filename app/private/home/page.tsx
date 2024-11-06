@@ -221,7 +221,7 @@ const CO2eDashboard = () => {
       )}
 
       {addedItems.length > 0 && (
-        <Card className="mt-6 w-full">
+        <Card className="mt-6 w-full" style={{marginBottom: 150}}>
           <CardHeader>
             <CardTitle className="text-lg">Today&apos;s Added Items</CardTitle>
           </CardHeader>
@@ -248,4 +248,4 @@ const CO2eDashboard = () => {
   );
 };
 
-export default withAuth(CO2eDashboard);
+export default CO2eDashboard;
