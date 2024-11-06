@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import CustomNavBar from '@/components/custom/CustomNavBar';
 import axios from 'axios';
+import CO2eGauge from '@/components/custom/CO2eGauge';
 
 axios.defaults.baseURL = 'https://v8-senior-2f6a65d2df2a.herokuapp.com';
 
@@ -133,8 +134,8 @@ const CO2eDashboard = () => {
 
           try {
             await axios.post('/calc/emissions/', emissionData, config);
-            await fetchTodaysEmissions(); // Refresh today's emissions after successful submission
-            setError(null); // Clear any errors on success
+            await fetchTodaysEmissions();
+            setError(null); 
           } catch (error) {
             console.error("Error submitting emission:", error);
             setError("Failed to submit emission data. Unauthorized access (401).");
@@ -156,16 +157,7 @@ const CO2eDashboard = () => {
   return (
     <div className="container mx-auto p-4 max-w-md">
       {error && <p className="text-red-500 text-center">{error}</p>}
-      <Card className="mb-6 w-full">
-        <CardHeader>
-          <CardTitle className="text-xl sm:text-2xl text-center">CO2e Dashboard</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-3xl sm:text-4xl font-bold text-center">
-            {totalCO2e.toFixed(2)} <span className="text-xl sm:text-2xl font-normal">kg CO2e/day</span>
-          </div>
-        </CardContent>
-      </Card>
+      <CO2eGauge value={totalCO2e} />
 
       {!selectedCategory ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-6">
