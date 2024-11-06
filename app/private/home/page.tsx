@@ -18,7 +18,7 @@ const CO2eDashboard = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [totalCO2e, setTotalCO2e] = useState(0);
-  const [addedItems, setAddedItems] = useState<Record<string, number>>({});
+  const [addedItems, setAddedItems] = useState([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -29,13 +29,13 @@ const CO2eDashboard = () => {
           setError("Authentication token not found.");
           return;
         }
-  
-        const config = { headers: { Authorization: `Bearer ${token}` } };
-  
+
+        const config = { headers: { Authorization: `Token ${token}` } };
+
         // Fetch categories
         const categoryRes = await axios.get('/calc/emission-categories/', config);
         setCategories(categoryRes.data);
-  
+
         // Fetch emission factors for each category
         const factorsRes = await axios.get('/calc/emission-factors/', config);
         const factorsByCategory = factorsRes.data.reduce((acc, factor) => {
@@ -43,19 +43,47 @@ const CO2eDashboard = () => {
           acc[factor.category].push(factor);
           return acc;
         }, {});
-        
+
         setFactors(factorsByCategory);
-  
-        // Log the structure of factorsByCategory
-        console.log("Fetched factors:", factorsByCategory);
       } catch (error) {
         console.error('Error fetching categories and factors:', error);
-        setError("Failed to fetch data. Please try again later.");
       }
     };
-  
+
     fetchCategoriesAndFactors();
   }, []);
+
+  // Fetch today's emissions
+  const fetchTodaysEmissions = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError("Authentication token not found.");
+        return;
+      }
+
+      const config = { headers: { Authorization: `Token ${token}` } };
+      const today = new Date().toISOString().split('T')[0];
+
+      // Fetch emissions for today
+      const response = await axios.get(`/calc/emissions/?date=${today}`, config);
+      setAddedItems(response.data);
+      setError(null); 
+    } catch (error) {
+      console.error("Error fetching today's emissions:", error);
+
+    }
+  };
+
+  useEffect(() => {
+    fetchTodaysEmissions();
+  }, []);
+
+  // Calculate total CO2e for today's emissions each time addedItems changes
+  useEffect(() => {
+    const total = addedItems.reduce((sum, item) => sum + item.total_emissions_kg, 0);
+    setTotalCO2e(total);
+  }, [addedItems]);
 
   const handleCategorySelect = (categoryId: string) => {
     setSelectedCategory(categoryId);
@@ -67,48 +95,30 @@ const CO2eDashboard = () => {
   };
 
   const handleSubmit = async () => {
-    console.log("handleSubmit called");
-  
     if (!selectedCategory) {
-      console.log("No category selected, aborting submit.");
+      setError("Please select a category before submitting.");
       return;
     }
-  
-    console.log("Selected category:", selectedCategory);
-    console.log("Quantities:", quantities);
-  
+
     const categoryFactors = factors[selectedCategory];
-    console.log("Category factors for selected category:", categoryFactors);
-  
     if (!categoryFactors) {
-      console.log("No factors found for selected category.");
       setError("No emission factors found for the selected category.");
       return;
     }
-  
-    let newAddedItems = { ...addedItems };
-    let newTotalCO2e = totalCO2e;
-  
-    // Retrieve and log the token to ensure it's correctly retrieved and prefixed
+
     const token = localStorage.getItem('token');
-    console.log("Retrieved token from localStorage:", token);
-  
     if (!token) {
-      console.log("Token not found in localStorage.");
       setError("Authentication token not found. Please log in again.");
       return;
     }
-  
-    // Set Authorization header
+
     const config = {
       headers: {
         Authorization: `Token ${token}`,
         "Content-Type": "application/json",
       },
     };
-  
-    console.log("Authorization header configured:", config.headers.Authorization);
-  
+
     // Iterate over each item in quantities and submit to the API
     for (const [factorId, quantity] of Object.entries(quantities)) {
       if (quantity > 0) {
@@ -120,40 +130,24 @@ const CO2eDashboard = () => {
             quantity,
             date: new Date().toISOString().split('T')[0],
           };
-  
-          console.log("Emission data prepared for submission:", emissionData);
-  
+
           try {
-            const response = await axios.post(
-              'http://v8-senior-2f6a65d2df2a.herokuapp.com/calc/emissions/',
-              emissionData,
-              config
-            );
-  
-            console.log("Emission submitted successfully:", response.data);
-  
-            newAddedItems[factorId] = (newAddedItems[factorId] || 0) + quantity;
-            newTotalCO2e += factor.factor * quantity;
-            setError(null);
+            await axios.post('/calc/emissions/', emissionData, config);
+            await fetchTodaysEmissions(); // Refresh today's emissions after successful submission
+            setError(null); // Clear any errors on success
           } catch (error) {
             console.error("Error submitting emission:", error);
             setError("Failed to submit emission data. Unauthorized access (401).");
             return;
           }
-        } else {
-          console.log(`Factor not found for id: ${factorId} in selected category.`);
         }
       }
     }
-  
-    setAddedItems(newAddedItems);
-    setTotalCO2e(newTotalCO2e);
+
     setQuantities({});
     setSelectedCategory(null);
-    console.log("Added items and total CO2e updated.");
   };
-  
-  
+
   const handleCancel = () => {
     setSelectedCategory(null);
     setQuantities({});
@@ -234,22 +228,24 @@ const CO2eDashboard = () => {
         </Card>
       )}
 
-      {Object.keys(addedItems).length > 0 && (
+      {addedItems.length > 0 && (
         <Card className="mt-6 w-full">
           <CardHeader>
-            <CardTitle className="text-lg">Added Items</CardTitle>
+            <CardTitle className="text-lg">Today's Added Items</CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="space-y-2">
-              {Object.entries(addedItems).map(([factorId, quantity]) => {
-                const category = Object.keys(factors).find((cat) => factors[cat].some((f) => f.id === factorId));
-                const factor = category ? factors[category].find((f) => f.id === factorId) : null;
-                return factor ? (
-                  <li key={factorId} className="flex justify-between text-sm">
-                    <span>{factor.name}</span>
-                    <span>{quantity} (Total: {(factor.factor * quantity).toFixed(2)} kg CO2e)</span>
+              {addedItems.map((item) => {
+                // Cross-reference the emission factor ID with factors to get the name
+                const factor = Object.values(factors)
+                  .flat()
+                  .find((f) => f.id === item.emission_factor);
+                return (
+                  <li key={item.id} className="flex justify-between text-sm">
+                    <span>{factor ? factor.name : "Unknown Item"}</span>
+                    <span>{item.quantity} (Total: {item.total_emissions_kg.toFixed(2)} kg CO2e)</span>
                   </li>
-                ) : null;
+                );
               })}
             </ul>
           </CardContent>
