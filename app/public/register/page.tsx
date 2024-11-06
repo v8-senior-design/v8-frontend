@@ -2,33 +2,91 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Loader2, Mail, User, Calendar, MapPin, Flag, Lock } from "lucide-react";
+import {
+  Loader2,
+  Mail,
+  User,
+  Calendar,
+  MapPin,
+  Flag,
+  Lock,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 const STATES = [
-  "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware",
-  "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana",
-  "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota", "Mississippi", "Missouri", "Montana",
-  "Nebraska", "Nevada", "New Hampshire", "New Jersey", "New Mexico", "New York", "North Carolina",
-  "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina",
-  "South Dakota", "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia",
-  "Wisconsin", "Wyoming"
+  "Alabama",
+  "Alaska",
+  "Arizona",
+  "Arkansas",
+  "California",
+  "Colorado",
+  "Connecticut",
+  "Delaware",
+  "Florida",
+  "Georgia",
+  "Hawaii",
+  "Idaho",
+  "Illinois",
+  "Indiana",
+  "Iowa",
+  "Kansas",
+  "Kentucky",
+  "Louisiana",
+  "Maine",
+  "Maryland",
+  "Massachusetts",
+  "Michigan",
+  "Minnesota",
+  "Mississippi",
+  "Missouri",
+  "Montana",
+  "Nebraska",
+  "Nevada",
+  "New Hampshire",
+  "New Jersey",
+  "New Mexico",
+  "New York",
+  "North Carolina",
+  "North Dakota",
+  "Ohio",
+  "Oklahoma",
+  "Oregon",
+  "Pennsylvania",
+  "Rhode Island",
+  "South Carolina",
+  "South Dakota",
+  "Tennessee",
+  "Texas",
+  "Utah",
+  "Vermont",
+  "Virginia",
+  "Washington",
+  "West Virginia",
+  "Wisconsin",
+  "Wyoming",
 ];
 
 export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const [email, setEmail] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [dob, setDob] = useState('');
-  const [state, setState] = useState('');
-  const [password, setPassword] = useState('');
-  const [password2, setPassword2] = useState('');
+  const [email, setEmail] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [dob, setDob] = useState("");
+  const [state, setState] = useState("");
+  const [password, setPassword] = useState("");
+  const [password2, setPassword2] = useState("");
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
@@ -44,23 +102,26 @@ export default function RegisterPage() {
     }
 
     try {
-      const response = await fetch("https://v8-senior-2f6a65d2df2a.herokuapp.com/user/register/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          first_name: firstName,
-          last_name: lastName,
-          dob,
-          state,
-          country: "USA",
-          password,
-          password2,
-        }),
-      });
+      const response = await fetch(
+        "https://v8-senior-2f6a65d2df2a.herokuapp.com/user/register/",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email,
+            first_name: firstName,
+            last_name: lastName,
+            dob,
+            state,
+            country: "USA",
+            password,
+            password2,
+          }),
+        }
+      );
 
       if (response.ok) {
-        router.push('/public/login'); // Redirect to login on successful registration
+        router.push("/public/login"); // Redirect to login on successful registration
       } else {
         const errorData = await response.json();
         setError(errorData.error || "Registration failed. Please try again.");
@@ -92,7 +153,9 @@ export default function RegisterPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-gray-700">Email</Label>
+                  <Label htmlFor="email" className="text-gray-700">
+                    Email
+                  </Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                     <Input
@@ -107,7 +170,9 @@ export default function RegisterPage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="first_name" className="text-gray-700">First Name</Label>
+                  <Label htmlFor="first_name" className="text-gray-700">
+                    First Name
+                  </Label>
                   <div className="relative">
                     <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                     <Input
@@ -121,7 +186,9 @@ export default function RegisterPage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="last_name" className="text-gray-700">Last Name</Label>
+                  <Label htmlFor="last_name" className="text-gray-700">
+                    Last Name
+                  </Label>
                   <div className="relative">
                     <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                     <Input
@@ -135,7 +202,9 @@ export default function RegisterPage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="dob" className="text-gray-700">Date of Birth</Label>
+                  <Label htmlFor="dob" className="text-gray-700">
+                    Date of Birth
+                  </Label>
                   <div className="relative">
                     <Calendar className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                     <Input
@@ -148,7 +217,9 @@ export default function RegisterPage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="state" className="text-gray-700">State</Label>
+                  <Label htmlFor="state" className="text-gray-700">
+                    State
+                  </Label>
                   <div className="relative">
                     <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                     <select
@@ -156,7 +227,7 @@ export default function RegisterPage() {
                       required
                       value={state}
                       onChange={(e) => setState(e.target.value)}
-                      className="w-full pl-10 bg-gray-50 border border-gray-300 text-gray-900 placeholder-gray-500 focus:border-gray-900 focus:ring-gray-900 rounded-md"
+                      className="w-full pl-10 pr-4 bg-gray-50 border border-gray-300 text-gray-900 placeholder-gray-500 focus:border-gray-900 focus:ring-gray-900 rounded-md h-[42px]"
                     >
                       <option value="">Select your state</option>
                       {STATES.map((stateName) => (
@@ -168,7 +239,9 @@ export default function RegisterPage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="country" className="text-gray-700">Country</Label>
+                  <Label htmlFor="country" className="text-gray-700">
+                    Country
+                  </Label>
                   <div className="relative">
                     <Flag className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                     <Input
@@ -180,7 +253,9 @@ export default function RegisterPage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-gray-700">Password</Label>
+                  <Label htmlFor="password" className="text-gray-700">
+                    Password
+                  </Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                     <Input
@@ -195,7 +270,9 @@ export default function RegisterPage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password2" className="text-gray-700">Confirm Password</Label>
+                  <Label htmlFor="password2" className="text-gray-700">
+                    Confirm Password
+                  </Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                     <Input
@@ -222,7 +299,7 @@ export default function RegisterPage() {
                     Registering...
                   </>
                 ) : (
-                  'Register'
+                  "Register"
                 )}
               </Button>
             </form>
@@ -230,7 +307,10 @@ export default function RegisterPage() {
           <CardFooter className="flex justify-center border-t border-gray-200 pt-4">
             <div className="text-sm text-gray-600">
               Already have an account?{" "}
-              <Link href="/public/login" className="text-gray-900 font-semibold hover:underline">
+              <Link
+                href="/public/login"
+                className="text-gray-900 font-semibold hover:underline"
+              >
                 Log in here
               </Link>
             </div>

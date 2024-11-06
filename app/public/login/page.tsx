@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Loader2, Lock, Mail } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const { login } = useAuth();
   const router = useRouter();
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -39,11 +41,7 @@ export default function LoginPage() {
       if (response.ok) {
         const data = await response.json();
         if (data.token) {
-          localStorage.setItem("token", data.token);
-          // Delay redirect to ensure it's triggered after token storage
-          setTimeout(() => {
-            router.replace("/private/home");
-          }, 100); // Short delay of 100ms
+          login(data.token);
         } else {
           setError("Login successful, but no token received.");
         }
