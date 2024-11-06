@@ -223,7 +223,7 @@ const CO2eDashboard = () => {
       {addedItems.length > 0 && (
         <Card className="mt-6 w-full">
           <CardHeader>
-            <CardTitle className="text-lg">Today's Added Items</CardTitle>
+            <CardTitle className="text-lg">Today&apos;s Added Items</CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="space-y-2">

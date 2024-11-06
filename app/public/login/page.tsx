@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Loader2, Lock, Mail } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
@@ -24,7 +24,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const { login } = useAuth();
-  const router = useRouter();
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -51,6 +50,7 @@ export default function LoginPage() {
       }
     } catch (err) {
       setError("Something went wrong. Please try again.");
+      console.log(err);
     } finally {
       setIsLoading(false);
     }
@@ -130,7 +130,7 @@ export default function LoginPage() {
           </CardContent>
           <CardFooter className="flex flex-col space-y-2 border-t border-gray-200 pt-4">
             <div className="text-sm text-gray-600 text-center">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <Link
                 href="/public/register"
                 className="text-gray-900 font-semibold hover:underline"
