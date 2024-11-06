@@ -1,10 +1,146 @@
-export default function Page() {
-    return (
-      <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-        <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-          <h1 className="text-4xl">Register</h1>
-        </main>
-      </div>
-    );
+'use client'
+
+import { useState } from 'react'
+import { motion } from 'framer-motion'
+import { Loader2, Mail, User, Calendar, MapPin, Flag } from 'lucide-react'
+import Link from 'next/link'
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+
+export default function RegisterPage() {
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setIsLoading(true)
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    setIsLoading(false)
   }
-  
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-black p-4">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Card className="w-full max-w-2xl bg-white text-gray-900 shadow-xl">
+          <CardHeader className="space-y-1 border-b border-gray-200 pb-4">
+            <CardTitle className="text-3xl font-bold tracking-tight text-center">
+              Register for v8
+            </CardTitle>
+            <CardDescription className="text-gray-600 text-center">
+              Create your account to get started
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-gray-700">Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                    <Input
+                      id="email"
+                      placeholder="m@example.com"
+                      type="email"
+                      autoCapitalize="none"
+                      autoComplete="email"
+                      autoCorrect="off"
+                      className="pl-10 bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:border-gray-900 focus:ring-gray-900"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="first_name" className="text-gray-700">First Name</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                    <Input
+                      id="first_name"
+                      placeholder="John"
+                      className="pl-10 bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:border-gray-900 focus:ring-gray-900"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="last_name" className="text-gray-700">Last Name</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                    <Input
+                      id="last_name"
+                      placeholder="Doe"
+                      className="pl-10 bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:border-gray-900 focus:ring-gray-900"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="dob" className="text-gray-700">Date of Birth</Label>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                    <Input
+                      id="dob"
+                      placeholder="YYYY-MM-DD"
+                      className="pl-10 bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:border-gray-900 focus:ring-gray-900"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="state" className="text-gray-700">State</Label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                    <Input
+                      id="state"
+                      placeholder="California"
+                      className="pl-10 bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:border-gray-900 focus:ring-gray-900"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="country" className="text-gray-700">Country</Label>
+                  <div className="relative">
+                    <Flag className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                    <Input
+                      id="country"
+                      placeholder="United States"
+                      className="pl-10 bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500 focus:border-gray-900 focus:ring-gray-900"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+              <Button 
+                type="submit" 
+                className="w-full bg-black hover:bg-gray-800 text-white transition-colors"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Registering...
+                  </>
+                ) : (
+                  'Register'
+                )}
+              </Button>
+            </form>
+          </CardContent>
+          <CardFooter className="flex justify-center border-t border-gray-200 pt-4">
+            <div className="text-sm text-gray-600">
+              Already have an account?{' '}
+              <Link href="/public/login" className="text-gray-900 font-semibold hover:underline">
+                Log in here
+              </Link>
+            </div>
+          </CardFooter>
+        </Card>
+      </motion.div>
+    </div>
+  )
+}
